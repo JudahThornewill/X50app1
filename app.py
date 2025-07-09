@@ -1,49 +1,25 @@
 import streamlit as st
 from openai import OpenAI
-import streamlit as st
 
-# Load key from Streamlit secrets
+# 🌐 Load API key securely from Streamlit secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Example prompt from user input or hardcoded
-prompt = "What's one way I could reflect more deeply today?"
-
-# GPT-4o response
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {"role": "system", "content": "You are a motivational wellbeing agent."},
-        {"role": "user", "content": prompt}
-    ],
-    temperature=0.7
-)
-
-# Extract and display result
-advice = response.choices[0].message.content
-st.markdown("**Agent Advice:**")
-st.write(advice)
-
-# Load API key from .env file
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+# ⚙️ Streamlit page config
 st.set_page_config(page_title="X50 LEW Estimator", layout="centered")
-
 st.title("🌱 X50: Lifelong Wellbeing Estimator")
 st.markdown("Use this tool to estimate your **LEW** (Life-Enhanced Wellbeing) and get guidance to improve it.")
 
-# Inputs
+# 🧮 User inputs
 life_expectancy = st.slider("Estimated Remaining Life Expectancy (years)", 0.0, 120.0, 40.0)
 wellby_score = st.slider("WELLBY Score (0–10)", 0.0, 10.0, 7.0)
 risk_adjustment = st.slider("Risk Adjustment Factor (0.0–1.0)", 0.0, 1.0, 0.85)
 
-# Calculation
+# 📊 LEW calculation
 lew = life_expectancy * wellby_score * risk_adjustment
-
 st.subheader("📊 Your Estimated LEW")
 st.metric(label="LEW (Life-Enhanced Wellbeing)", value=round(lew, 2))
 
-# Generate contextual advice using GPT
+# 🤖 Advice generator using GPT
 def generate_advice(lew, wellby, risk):
     prompt = f"""
     You are X50 AI, a pragmatic, motivational wellbeing advisor.
@@ -52,21 +28,28 @@ def generate_advice(lew, wellby, risk):
     either through increasing life expectancy, boosting WELLBYs, or reducing risk.
     Be encouraging, concise, and grounded in science-based wisdom.
     """
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You're a motivational LEW advisor."},
+            {"role": "user", "content": prompt}
+        ],
         temperature=0.7
     )
-    return response['choices'][0]['message']['content'].strip()
 
-# LLM-powered advice
-if openai.api_key:
-    with st.spinner("Thinking deeply about your wellbeing..."):
+    return response.choices[0].message.content.strip()
+
+# 🧭 Generate and display guidance
+with st.spinner("Thinking deeply about your wellbeing..."):
+    try:
         advice = generate_advice(lew, wellby_score, risk_adjustment)
-    st.subheader("🧭 X50 AI Guidance")
-    st.write(advice)
-else:
-    st.warning("OpenAI key not found. Please set OPENAI_API_KEY in a .env file.")
+        st.subheader("🧭 X50 AI Guidance")
+        st.write(advice)
+    except Exception as e:
+        st.error("An error occurred while generating advice.")
+        st.caption(f"Details: {e}")
 
+# 🧠 Footer
 st.markdown("---")
 st.caption("🧠 This is an early prototype. X50 AI provides motivational insights—not medical advice.")
