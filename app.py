@@ -1,27 +1,27 @@
 import streamlit as st
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
+import streamlit as st
 
-# Load OpenAI key securely from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Load key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
+# Example prompt from user input or hardcoded
+prompt = "What's one way I could reflect more deeply today?"
+
+# GPT-4o response
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
+        {"role": "system", "content": "You are a motivational wellbeing agent."},
         {"role": "user", "content": prompt}
     ],
     temperature=0.7
-
-    messages=[
-        {"role": "system", "content": "You are a motivational wellbeing agent."},
-        {"role": "user", "content": "What's one way I could reflect more deeply today?"}
-    ]
 )
+
+# Extract and display result
 advice = response.choices[0].message.content
-
-st.write(response['choices'][0]['message']['content'])
-
+st.markdown("**Agent Advice:**")
+st.write(advice)
 
 # Load API key from .env file
 load_dotenv()
